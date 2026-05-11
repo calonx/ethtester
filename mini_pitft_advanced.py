@@ -36,7 +36,7 @@ text_area = label.Label(
     text="Mini PiTFT",
     color=0xFFFF00,
     scale=2,
-    # anchor_point=(0.5, 0.5),
+    anchor_point=(0.0, 0.0),
     # anchored_position=(display.width // 2, display.height // 2)
 )
 splash.append(text_area)
