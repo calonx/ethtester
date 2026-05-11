@@ -8,6 +8,9 @@ import board
 import displayio
 import terminalio
 import time
+import subprocess
+import select
+import re
 from adafruit_display_text import label
 from fourwire import FourWire
 
@@ -33,10 +36,11 @@ display.root_group = splash
 # Create a dynamic text label
 text_area = label.Label(
     terminalio.FONT,
-    text="Mini PiTFT",
+    text="abcdefghijklmnopqrst\nabcdefghijklmnopqrst",
     color=0xFFFF00,
     scale=2,
     anchor_point=(0.0, 0.0),
+    anchored_position=(0, 0),
     # anchored_position=(display.width // 2, display.height // 2)
 )
 splash.append(text_area)
@@ -47,10 +51,26 @@ color_index = 0
 
 print("Running advanced demo. Press Ctrl+C to exit.")
 try:
+    logpath = './iperf3.log'
+    print(f'Tailing {logpath}')
+    f = subprocess.Popen(f'tail -F {logpath}'.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = select.poll()
+    p.register(f.stdout)
+
     while True:
+        while p.poll(1):
+            data = f.stdout.readline().decode("utf8").strip()
+            xmit_speed = re.search(r'\b\d+(\.\d+)?\b [KMGP]?bits/sec$', data)
+            if xmit_speed:
+                raw_text = xmit_speed.group(0)
+                text_area.text = raw_text
+                text_area.color = (0x00, 0xff, 0x00)
+
+            print(xmit_speed)
+            print(f'Log: {data}')
         # Cycle through colors
-        text_area.color = colors[color_index % len(colors)]
-        color_index += 1
+        #text_area.color = colors[color_index % len(colors)]
+        #color_index += 1
         time.sleep(0.5)
 except KeyboardInterrupt:
     print("\nExiting...")
